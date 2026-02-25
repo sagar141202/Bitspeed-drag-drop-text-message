@@ -1,0 +1,35 @@
+// Prisma Schema for BiteSpeed Identity Reconciliation
+// This schema defines the Contact model which stores customer contact information.
+// Contacts can be linked together when they share email or phone number.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Contact Model
+// Represents a customer's contact information. Multiple contacts can be linked
+// together when they share email or phone number - representing the same person.
+model Contact {
+  id            Int       @id @default(autoincrement())
+  email         String?   @db.VarChar(255)
+  phoneNumber   String?   @db.VarChar(50)
+  linkedId      Int?
+  linkPrecedence String   @default("primary") @db.VarChar(20)
+  createdAt     DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamp(6)
+  deletedAt     DateTime? @db.Timestamp(6)
+
+  // Self-referential relation for linked contacts
+  linkedContact Contact?  @relation("ContactLinks", fields: [linkedId], references: [id])
+  secondaryContacts Contact[] @relation("ContactLinks")
+
+  // Indexes for efficient lookups
+  @@index([email])
+  @@index([phoneNumber])
+  @@index([linkedId])
+}
