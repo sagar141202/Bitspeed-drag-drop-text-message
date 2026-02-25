@@ -174,6 +174,15 @@ const FlowBuilder = () => {
     clearMessage();
   }, [selectNode, clearMessage]);
 
+  /**
+   * Handle edge click - delete edge when clicked
+   * Allows user to undo/remove connections
+   */
+  const onEdgeClick = useCallback((event, edge) => {
+    // Remove the edge from the edges array
+    setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+  }, [setEdges]);
+
   // Memoize the style object for better performance
   const reactFlowStyle = useMemo(() => ({
     background: '#f8f9fa'
@@ -204,6 +213,7 @@ const FlowBuilder = () => {
           onDragOver={onDragOver}
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
+          onEdgeClick={onEdgeClick}
           nodeTypes={nodeTypes}
           style={reactFlowStyle}
           // Connection line settings
