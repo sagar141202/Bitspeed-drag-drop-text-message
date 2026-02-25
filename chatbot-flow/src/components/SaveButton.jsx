@@ -11,11 +11,31 @@ import { validateFlow } from '../utils/validation';
  * - If there are more than one node, all must have connected target handles
  *   (i.e., not more than one node can be disconnected)
  * 
- * On successful save, it logs the flow data to console (simulating API call)
+ * On successful save, it downloads the flow data as a JSON file
  */
 const SaveButton = () => {
   // Get state from store
-  const { nodes, edges, setMessage, message } = useFlowStore();
+  const { nodes, edges, addToast } = useFlowStore();
+  
+  /**
+   * Download flow data as JSON file
+   */
+  const downloadFlow = (flowData) => {
+    const jsonString = JSON.stringify(flowData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create temporary link to trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `chatbot-flow-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+  };
   
   /**
    * Handle save button click
@@ -26,18 +46,27 @@ const SaveButton = () => {
     const validationResult = validateFlow(nodes, edges);
     
     if (!validationResult.valid) {
-      // Show error message
-      setMessage({ type: 'error', text: validationResult.error });
+      // Show error toast
+      addToast(validationResult.error, 'error');
       return;
     }
     
     // Flow is valid - prepare the flow data
     const flowData = {
+      flow: {
+        name: 'Chatbot Flow',
+        description: 'Flow saved from Chatbot Flow Builder'
+      },
       nodes: nodes.map(node => ({
         id: node.id,
         type: node.type,
-        position: node.position,
-        data: node.data
+        position: {
+          x: node.position.x,
+          y: node.position.y
+        },
+        data: {
+          text: node.data?.text || ''
+        }
       })),
       edges: edges.map(edge => ({
         id: edge.id,
@@ -49,18 +78,16 @@ const SaveButton = () => {
       metadata: {
         nodeCount: nodes.length,
         edgeCount: edges.length,
-        savedAt: new Date().toISOString()
+        savedAt: new Date().toISOString(),
+        version: '1.0'
       }
     };
     
-    // Log the flow data (in production, this would be an API call)
-    console.log('Flow saved successfully!', flowData);
+    // Download the flow data as JSON
+    downloadFlow(flowData);
     
-    // Show success message
-    setMessage({ 
-      type: 'success', 
-      text: `Flow saved successfully! (${nodes.length} nodes, ${edges.length} connections)`
-    });
+    // Show success toast
+    addToast(`Flow saved successfully! (${nodes.length} nodes, ${edges.length} connections)`, 'success');
   };
   
   return (
@@ -72,15 +99,9 @@ const SaveButton = () => {
       >
         💾 Save Flow
       </button>
-      
-      {/* Display message if exists */}
-      {message && (
-        <div className={message.type === 'error' ? 'error-message' : 'success-message'}>
-          {message.text}
-        </div>
-      )}
     </div>
   );
 };
 
 export default SaveButton;
+

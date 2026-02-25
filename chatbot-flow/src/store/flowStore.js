@@ -4,6 +4,8 @@ import { create } from 'zustand';
  * Flow Store - Manages the state of the chatbot flow builder
  * Uses Zustand for clean and simple state management
  */
+let toastId = 0;
+
 const useFlowStore = create((set, get) => ({
   // Nodes in the flow
   nodes: [],
@@ -16,6 +18,9 @@ const useFlowStore = create((set, get) => ({
   
   // Message to show to user (success/error)
   message: null,
+  
+  // Toast notifications
+  toasts: [],
   
   // Set nodes
   setNodes: (nodes) => set({ nodes }),
@@ -52,6 +57,21 @@ const useFlowStore = create((set, get) => ({
   
   // Clear message
   clearMessage: () => set({ message: null }),
+  
+  // Toast methods
+  addToast: (message, type = 'success') => {
+    const id = ++toastId;
+    set((state) => ({
+      toasts: [...state.toasts, { id, message, type }]
+    }));
+    return id;
+  },
+  
+  removeToast: (id) => {
+    set((state) => ({
+      toasts: state.toasts.filter(t => t.id !== id)
+    }));
+  },
   
   /**
    * Validate the flow before saving

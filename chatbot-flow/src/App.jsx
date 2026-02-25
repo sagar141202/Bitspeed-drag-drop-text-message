@@ -16,6 +16,7 @@ import TextNode from './components/nodes/TextNode';
 import NodesPanel from './components/NodesPanel';
 import SettingsPanel from './components/SettingsPanel';
 import SaveButton from './components/SaveButton';
+import Toast from './components/Toast';
 import useFlowStore from './store/flowStore';
 import { sourceHasConnection } from './utils/validation';
 
@@ -52,7 +53,10 @@ const FlowBuilder = () => {
     selectNode, 
     setNodes: setStoreNodes, 
     setEdges: setStoreEdges,
-    clearMessage 
+    clearMessage,
+    addToast,
+    toasts,
+    removeToast
   } = useFlowStore();
   
   // Store sync - keep local state in sync with store
@@ -97,7 +101,7 @@ const FlowBuilder = () => {
     // Check if source already has a connection
     // If so, don't allow another connection from the same source
     if (sourceHasConnection(params.source, edges)) {
-      alert('Source handle can only have one connection!');
+      addToast('Source handle can only have one connection!', 'error');
       return;
     }
     
@@ -111,7 +115,7 @@ const FlowBuilder = () => {
       }, 
       eds
     ));
-  }, [edges, setEdges]);
+  }, [edges, setEdges, addToast]);
 
   /**
    * Handle drag over event - allows dropping
@@ -190,6 +194,9 @@ const FlowBuilder = () => {
 
   return (
     <div className="app-container">
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      
       {/* Sidebar with Nodes Panel or Settings Panel */}
       <div className="sidebar">
         {selectedNode ? (
